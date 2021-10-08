@@ -1,0 +1,305 @@
+[gd_scene load_steps=6 format=2]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Spatial
+
+var longStraightScene = preload(\"res://LongStraight.tscn\")
+var longStraight: Piece
+var mode = 0
+var height = 10
+var width = 4
+var length = 4
+var matrix = []
+
+func _ready() -> void:
+
+	for y in range(height):
+		matrix.append([])
+		for x in range(length):
+			matrix[y].append([])
+			for z in range(width):
+				matrix[y][x].append(false)
+				
+	print_matrix()
+	longStraight = longStraightScene.instance()
+	add_child(longStraight)
+	longStraight.transform.origin = Vector3(-length, height, -width)
+	
+func spawn_new_block() -> void:
+	mode = 0
+	longStraight = longStraightScene.instance()
+	add_child(longStraight)
+	longStraight.transform.origin = Vector3(-length, height, -width)
+
+func _on_Timer_timeout() -> void:
+	print(\"tick\")
+	if longStraight:
+		if not is_set():
+			# 2 is important for the math of converting block origin to matrix position right now
+			longStraight.transform.origin.y -= 2
+		else:
+			record_set(longStraight)
+			check_planes()
+			spawn_new_block()
+
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed(\"switch_mode\"):
+		mode = 1 if mode == 0 else 0
+	elif event.is_action_pressed(\"speed\"):
+		$Timer.wait_time = 0.2
+	elif event.is_action_released(\"speed\"):
+		$Timer.wait_time = 0.75
+	else:
+		match(mode):
+			1:
+				rotate_block(event)
+			0: 
+				move_block(event)
+			_:
+				move_block(event)
+			
+func rotate_block(event: InputEvent) -> void:
+	if event.is_action_pressed(\"left\"):
+		longStraight.rotate(Vector3.UP, -PI/2.0)
+	if event.is_action_pressed(\"right\"):
+		longStraight.rotate(Vector3.UP, PI/2.0)
+	if event.is_action_pressed(\"up\"):
+		longStraight.rotate(Vector3.LEFT, -PI/2.0)
+	if event.is_action_pressed(\"down\"):
+		longStraight.rotate(Vector3.LEFT, PI/2.0)
+		
+func move_block(event: InputEvent) -> void:
+	if event.is_action_pressed(\"left\"):
+		if longStraight.can_move(\"left\", length, width):
+			longStraight.global_translate(Vector3(0, 0, 2))
+	if event.is_action_pressed(\"right\"):
+		if longStraight.can_move(\"right\", length, width):
+			longStraight.global_translate(Vector3(0, 0, -2))
+	if event.is_action_pressed(\"up\"):
+		if longStraight.can_move(\"up\", length, width):
+			longStraight.global_translate(Vector3(-2, 0, 0))
+	if event.is_action_pressed(\"down\"):
+		if longStraight.can_move(\"down\", length, width):
+			longStraight.global_translate(Vector3(2, 0, 0))
+
+func record_set(piece) -> void:
+	for cube in piece.get_children():
+		var set : Vector3 = cube.global_transform.origin
+		set = convert_origin_to_matrix(set)
+#		print(set)
+#		print(matrix[set.y][set.x][set.z])
+		matrix[set.y][set.x][set.z] = cube  
+	print_matrix()
+
+func move_piece_in_matrix(piece) -> void:
+	for cube in piece.get_children():
+		var pos = convert_origin_to_matrix(cube.global_transform.origin)
+		matrix[pos.y][pos.x][pos.z] = false
+	record_set(piece)
+
+
+func check_planes() -> void:
+	var planes = []
+	for y in height:
+		var planed = true
+		for x in length:
+			if planed:
+				for z in width:
+					if not matrix[y][x][z] is CSGBox:
+						planed = false
+						break;
+			else:
+				break;
+		if (planed):
+			planes.append(y)
+	print(planes)
+	if planes.size() > 0:
+		print(\"CLEAR\")
+		free_planes(planes)
+		lower_pieces(planes)
+		check_planes()
+					
+func free_planes(planes: Array) -> void:
+	for y in planes:
+			for x in length:
+				for z in width:
+					matrix[y][x][z].queue_free()
+					matrix[y][x][z] = false
+
+func lower_pieces(planes: Array) -> void:
+	var highest_plane = planes.back()
+	for x in length:
+		for z in width:
+			## SKIP IF ALREADY PROCESSED PIECE
+			if matrix[highest_plane+1][x][z] is CSGBox:
+				var piece : Piece = (matrix[highest_plane+1][x][z] as CSGBox).get_parent()
+				var drop_height = calc_piece_drop_height(piece)  # NEXT: ACTUALLY DROP PIECES
+				print(\"DROPPING\")
+				print(drop_height)
+				piece.transform.origin.y -= drop_height * 2
+				move_piece_in_matrix(piece)
+				
+					
+				
+func calc_piece_drop_height(piece: Piece) -> int:
+	var done = false
+	var heights = []
+	for cube in piece.get_children():
+			for i in range(1,height):
+				var pos = convert_origin_to_matrix(cube.global_transform.origin)
+				var check = matrix[pos.y-i][pos.x][pos.z]
+				if check is CSGBox:
+					var check_parent = check.get_parent()
+					if (not check_parent == piece):
+						heights.append(i-1)
+						break
+					else:
+						break
+				elif pos.y - i == 0:
+					heights.append(i)
+					break
+	heights.sort()
+	return heights[0]
+	
+func print_matrix() -> void:
+	for x in range(matrix.size()):
+		print(matrix[x])
+		
+func convert_origin_to_matrix(global_origin: Vector3) -> Vector3:
+	var new_origin = global_origin.round()
+	var new = (global_origin.abs()/2).floor()
+	if (int(new_origin.y) % 2 == 0):
+		return new - Vector3(0,1,0)
+	else:
+		return new
+
+func is_set() -> bool:
+	print(\"new_check\")
+	for cube in longStraight.get_children():
+		var current_pos = convert_origin_to_matrix(cube.global_transform.origin)
+		var check_pos = current_pos - Vector3(0,1,0)
+		print(\"check pose\")
+		print(cube.global_transform.origin)
+		print(current_pos)
+		print(matrix[check_pos.y][check_pos.x][check_pos.z])
+		if current_pos.y == 0 or matrix[check_pos.y][check_pos.x][check_pos.z]:
+			return true
+	return false
+	
+"
+
+[sub_resource type="CubeMesh" id=2]
+
+[sub_resource type="SpatialMaterial" id=3]
+albedo_color = Color( 0.694118, 0.968627, 0.741176, 1 )
+
+[sub_resource type="CubeMesh" id=4]
+
+[sub_resource type="SpatialMaterial" id=5]
+albedo_color = Color( 1, 0.0470588, 0.0470588, 1 )
+
+[node name="Main" type="Spatial"]
+script = SubResource( 1 )
+
+[node name="CSGMesh" type="CSGMesh" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -5, -1, -5 )
+mesh = SubResource( 2 )
+material = SubResource( 3 )
+
+[node name="CSGMesh2" type="CSGMesh" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -3, -1, -5 )
+mesh = SubResource( 2 )
+material = SubResource( 3 )
+
+[node name="CSGMesh3" type="CSGMesh" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -3, -1, -3 )
+mesh = SubResource( 2 )
+material = SubResource( 3 )
+
+[node name="CSGMesh4" type="CSGMesh" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -5, -1, -3 )
+mesh = SubResource( 2 )
+material = SubResource( 3 )
+
+[node name="CSGMesh5" type="CSGMesh" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -5, -1, -7 )
+mesh = SubResource( 2 )
+material = SubResource( 3 )
+
+[node name="CSGMesh6" type="CSGMesh" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -3, -1, -7 )
+mesh = SubResource( 2 )
+material = SubResource( 3 )
+
+[node name="CSGMesh7" type="CSGMesh" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -1, -1, -7 )
+mesh = SubResource( 2 )
+material = SubResource( 3 )
+
+[node name="CSGMesh8" type="CSGMesh" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -1, -1, -5 )
+mesh = SubResource( 2 )
+material = SubResource( 3 )
+
+[node name="CSGMesh9" type="CSGMesh" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -1, -1, -3 )
+mesh = SubResource( 2 )
+material = SubResource( 3 )
+
+[node name="CSGMesh10" type="CSGMesh" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -1, -1, -1 )
+mesh = SubResource( 2 )
+material = SubResource( 3 )
+
+[node name="CSGMesh11" type="CSGMesh" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -3, -1, -1 )
+mesh = SubResource( 2 )
+material = SubResource( 3 )
+
+[node name="CSGMesh12" type="CSGMesh" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -5, -1, -1 )
+mesh = SubResource( 2 )
+material = SubResource( 3 )
+
+[node name="CSGMesh13" type="CSGMesh" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -7, -1, -1 )
+mesh = SubResource( 2 )
+material = SubResource( 3 )
+
+[node name="CSGMesh14" type="CSGMesh" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -7, -1, -3 )
+mesh = SubResource( 2 )
+material = SubResource( 3 )
+
+[node name="CSGMesh15" type="CSGMesh" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -7, -1, -5 )
+mesh = SubResource( 2 )
+material = SubResource( 3 )
+
+[node name="CSGMesh16" type="CSGMesh" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -7, -1, -7 )
+mesh = SubResource( 2 )
+material = SubResource( 3 )
+
+[node name="DirectionalLight" type="DirectionalLight" parent="."]
+transform = Transform( 1, 0, 0, 0, 0.00575988, 0.999983, 0, -0.999983, 0.00575988, -2.77157, 14.4549, -3.55254 )
+light_energy = 0.35
+shadow_enabled = true
+
+[node name="Camera" type="Camera" parent="."]
+transform = Transform( 0.714949, -0.289811, 0.636285, 0, 0.910048, 0.414503, -0.699177, -0.296348, 0.650638, 4.64481, 10.0639, 4.74959 )
+projection = 1
+size = 30.0
+near = 0.5
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 0.75
+autostart = true
+
+[node name="DebugCube" type="CSGMesh" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 2, -1 )
+visible = false
+mesh = SubResource( 4 )
+material = SubResource( 5 )
+
+[connection signal="timeout" from="Timer" to="." method="_on_Timer_timeout"]
