@@ -24,6 +24,10 @@ config/name="3DTetris"
 run/main_scene="res://Main.tscn"
 config/icon="res://icon.png"
 
+[autoload]
+
+DebugOverlay="*res://DebugOverlay.tscn"
+
 [global]
 
 shader=false

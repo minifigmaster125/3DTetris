@@ -1,4 +1,6 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=7 format=2]
+
+[ext_resource path="res://DebugOverlay.tscn" type="PackedScene" id=1]
 
 [sub_resource type="GDScript" id=1]
 script/source = "extends Spatial
@@ -21,15 +23,13 @@ func _ready() -> void:
 				matrix[y][x].append(false)
 				
 	print_matrix()
-	longStraight = longStraightScene.instance()
-	add_child(longStraight)
-	longStraight.transform.origin = Vector3(-length, height, -width)
+	spawn_new_block()
 	
 func spawn_new_block() -> void:
 	mode = 0
 	longStraight = longStraightScene.instance()
 	add_child(longStraight)
-	longStraight.transform.origin = Vector3(-length, height, -width)
+	longStraight.transform.origin = Vector3(-length+1, height+1, -width)
 
 func _on_Timer_timeout() -> void:
 	print(\"tick\")
@@ -59,14 +59,7 @@ func _input(event: InputEvent) -> void:
 				move_block(event)
 			
 func rotate_block(event: InputEvent) -> void:
-	if event.is_action_pressed(\"left\"):
-		longStraight.rotate(Vector3.UP, -PI/2.0)
-	if event.is_action_pressed(\"right\"):
-		longStraight.rotate(Vector3.UP, PI/2.0)
-	if event.is_action_pressed(\"up\"):
-		longStraight.rotate(Vector3.LEFT, -PI/2.0)
-	if event.is_action_pressed(\"down\"):
-		longStraight.rotate(Vector3.LEFT, PI/2.0)
+	longStraight.rotate_block(event)
 		
 func move_block(event: InputEvent) -> void:
 	if event.is_action_pressed(\"left\"):
@@ -168,6 +161,7 @@ func print_matrix() -> void:
 func convert_origin_to_matrix(global_origin: Vector3) -> Vector3:
 	var new_origin = global_origin.round()
 	var new = (global_origin.abs()/2).floor()
+#	return new
 	if (int(new_origin.y) % 2 == 0):
 		return new - Vector3(0,1,0)
 	else:
@@ -301,5 +295,7 @@ transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 2, -1 )
 visible = false
 mesh = SubResource( 4 )
 material = SubResource( 5 )
+
+[node name="DebugOverlay" parent="." instance=ExtResource( 1 )]
 
 [connection signal="timeout" from="Timer" to="." method="_on_Timer_timeout"]
