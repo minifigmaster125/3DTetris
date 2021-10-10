@@ -41,7 +41,7 @@ func _draw():
 
 func add_vector(object, value, size, width, color):
 	vectors.append(Vector.new(object, value, size, width, color))
-	print("registered %s of %s." % [value, object.name])
+#	print("registered %s of %s." % [value, object.name])
 
 
 func remove_vector(object, property):
