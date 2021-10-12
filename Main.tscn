@@ -1,6 +1,7 @@
-[gd_scene load_steps=7 format=2]
+[gd_scene load_steps=9 format=2]
 
 [ext_resource path="res://DebugOverlay.tscn" type="PackedScene" id=1]
+[ext_resource path="res://HeadingDisplay.tscn" type="PackedScene" id=2]
 
 [sub_resource type="GDScript" id=1]
 script/source = "extends Spatial
@@ -217,6 +218,9 @@ albedo_color = Color( 0.694118, 0.968627, 0.741176, 1 )
 [sub_resource type="SpatialMaterial" id=5]
 albedo_color = Color( 1, 0.0470588, 0.0470588, 1 )
 
+[sub_resource type="ViewportTexture" id=6]
+viewport_path = NodePath("Node2D/Viewport")
+
 [node name="Main" type="Spatial"]
 script = SubResource( 1 )
 
@@ -321,11 +325,37 @@ material = SubResource( 5 )
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -4 )
 
 [node name="Camera" type="Camera" parent="Pivot"]
-transform = Transform( 0.714949, -0.289811, 0.636285, 0, 0.910048, 0.414503, -0.699177, -0.296348, 0.650638, 8.64481, 10.0639, 8.74959 )
+transform = Transform( 0.714949, -0.289811, 0.636285, 0, 0.910048, 0.414503, -0.699177, -0.296348, 0.650638, 7.49022, 13.6895, 7.56896 )
 projection = 1
+current = true
 size = 30.0
 near = 0.5
 
 [node name="Tween" type="Tween" parent="Pivot"]
+
+[node name="Node2D" type="Node2D" parent="."]
+
+[node name="Label" type="Label" parent="Node2D"]
+margin_left = 5.2038
+margin_top = 4.45728
+margin_right = 84.2038
+margin_bottom = 51.4573
+text = "Score"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Viewport" type="Viewport" parent="Node2D"]
+size = Vector2( 300, 300 )
+own_world = true
+transparent_bg = true
+render_target_v_flip = true
+
+[node name="HeadingDisplay" parent="Node2D/Viewport" instance=ExtResource( 2 )]
+transform = Transform( 0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 0, 0, 0 )
+
+[node name="headingSprite" type="Sprite" parent="Node2D"]
+position = Vector2( 587.737, 839.433 )
+texture = SubResource( 6 )
 
 [connection signal="timeout" from="Timer" to="." method="_on_Timer_timeout"]

@@ -28,9 +28,16 @@ config/icon="res://icon.png"
 
 DebugOverlay="*res://DebugOverlay.tscn"
 
+[display]
+
+window/size/width=768
+window/size/height=1024
+
 [global]
 
 shader=false
+grid=false
+ambien=false
 
 [input]
 
