@@ -17,6 +17,7 @@ var matrix = []
 var toggle = true
 var camera_rotate = null
 onready var cameraTween = $Pivot/Tween
+signal rotate_game(positive)
 
 func _ready() -> void:
 
@@ -29,6 +30,7 @@ func _ready() -> void:
 				
 	print_matrix()
 	spawn_new_block()
+	connect(\"rotate_game\", $Node2D/Viewport/HeadingDisplay, \"_rotate_heading\")
 	
 func _process(delta: float) -> void:
 
@@ -36,11 +38,13 @@ func _process(delta: float) -> void:
 
 		cameraTween.interpolate_property($Pivot, \"rotation:y\", $Pivot.rotation.y, $Pivot.rotation.y + deg2rad(90.0), 0.2)
 		cameraTween.start()
+		emit_signal(\"rotate_game\", true)
 		camera_rotate = null
 		
 	if (camera_rotate == 1):
 		cameraTween.interpolate_property($Pivot, \"rotation:y\", $Pivot.rotation.y, $Pivot.rotation.y - deg2rad(90.0), 0.2)
 		cameraTween.start()
+		emit_signal(\"rotate_game\", false)
 		camera_rotate = null
 
 	
@@ -148,8 +152,6 @@ func lower_pieces(planes: Array) -> void:
 			if matrix[highest_plane+1][x][z] is CSGBox:
 				var piece : Piece = (matrix[highest_plane+1][x][z] as CSGBox).get_parent()
 				var drop_height = calc_piece_drop_height(piece)  # NEXT: ACTUALLY DROP PIECES
-				print(\"DROPPING\")
-				print(drop_height)
 				
 				for cube in piece.get_children():
 					var pos = convert_origin_to_matrix(cube.global_transform.origin)

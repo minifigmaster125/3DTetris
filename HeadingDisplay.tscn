@@ -1,21 +1,32 @@
-[gd_scene load_steps=2 format=2]
+[gd_scene load_steps=3 format=2]
 
-[sub_resource type="SpatialMaterial" id=1]
-albedo_color = Color( 0.815686, 0.239216, 0.239216, 1 )
+[ext_resource path="res://arrow.glb" type="PackedScene" id=1]
+[ext_resource path="res://HeadingDisplay.gd" type="Script" id=2]
 
 [node name="HeadingDisplay" type="Spatial"]
+script = ExtResource( 2 )
 
 [node name="Camera" type="Camera" parent="."]
 transform = Transform( 1, 0, 0, 0, 0.845364, 0.53419, 0, -0.53419, 0.845364, 0, 3.52496, 3.96674 )
 projection = 1
 size = 5.64
 
-[node name="CSGCylinder" type="CSGCylinder" parent="."]
-transform = Transform( 0.0442123, 0.999022, 4.36686e-08, 0, -4.37114e-08, 1, 0.999022, -0.0442123, -1.93258e-09, 0, 0, 0 )
-cast_shadow = 0
-radius = 0.358379
-height = 0.710332
-material = SubResource( 1 )
-
 [node name="DirectionalLight" type="DirectionalLight" parent="."]
 transform = Transform( 1, 0, 0, 0, 0.153314, 0.988178, 0, -0.988178, 0.153314, 0, 1.92167, 0 )
+
+[node name="Pivot" type="Spatial" parent="."]
+transform = Transform( 0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, 0.707107, 0, 0, 0 )
+
+[node name="arrow" parent="Pivot" instance=ExtResource( 1 )]
+transform = Transform( -6.11959e-09, 0, -0.14, 0, 0.14, 0, 0.14, 0, -6.11959e-09, 0, 0, -1 )
+
+[node name="arrow2" parent="Pivot" instance=ExtResource( 1 )]
+transform = Transform( -6.11959e-09, 0, 0.14, 0, 0.14, 0, -0.14, 0, -6.11959e-09, 0, 0, 1 )
+
+[node name="arrow3" parent="Pivot" instance=ExtResource( 1 )]
+transform = Transform( -0.14, 0, -1.22392e-08, 0, 0.14, 0, 1.22392e-08, 0, -0.14, 1, 0, 0 )
+
+[node name="arrow4" parent="Pivot" instance=ExtResource( 1 )]
+transform = Transform( 0.14, 0, 2.44784e-08, 0, 0.14, 0, -2.44784e-08, 0, 0.14, -1, 0, 0 )
+
+[node name="Tween" type="Tween" parent="Pivot"]
