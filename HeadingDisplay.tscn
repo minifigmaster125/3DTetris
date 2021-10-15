@@ -1,7 +1,10 @@
-[gd_scene load_steps=3 format=2]
+[gd_scene load_steps=6 format=2]
 
 [ext_resource path="res://arrow.glb" type="PackedScene" id=1]
 [ext_resource path="res://HeadingDisplay.gd" type="Script" id=2]
+[ext_resource path="res://w_key.glb" type="PackedScene" id=3]
+[ext_resource path="res://s_key.glb" type="PackedScene" id=4]
+[ext_resource path="res://d_key.glb" type="PackedScene" id=5]
 
 [node name="HeadingDisplay" type="Spatial"]
 script = ExtResource( 2 )
@@ -30,3 +33,12 @@ transform = Transform( -0.14, 0, -1.22392e-08, 0, 0.14, 0, 1.22392e-08, 0, -0.14
 transform = Transform( 0.14, 0, 2.44784e-08, 0, 0.14, 0, -2.44784e-08, 0, 0.14, -1, 0, 0 )
 
 [node name="Tween" type="Tween" parent="Pivot"]
+
+[node name="w_key" parent="Pivot" instance=ExtResource( 3 )]
+transform = Transform( 0.697562, -0.294802, 0.653069, 0.018278, 0.918465, 0.395081, -0.716291, -0.263656, 0.646075, -2.12856, 0, 0.153209 )
+
+[node name="s_key" parent="Pivot" instance=ExtResource( 4 )]
+transform = Transform( 0.67207, -0.249104, 0.69733, 0, 0.941717, 0.336405, -0.740488, -0.226088, 0.6329, 2.2514, 0, -0.0408915 )
+
+[node name="d_key" parent="Pivot" instance=ExtResource( 5 )]
+transform = Transform( 0.661377, 0, 0.750054, 0, 1, 0, -0.750054, 0, 0.661378, -0.080633, -0.232203, -2.53782 )
