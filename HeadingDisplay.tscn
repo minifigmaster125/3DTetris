@@ -1,10 +1,11 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=7 format=2]
 
 [ext_resource path="res://arrow.glb" type="PackedScene" id=1]
 [ext_resource path="res://HeadingDisplay.gd" type="Script" id=2]
 [ext_resource path="res://w_key.glb" type="PackedScene" id=3]
 [ext_resource path="res://s_key.glb" type="PackedScene" id=4]
 [ext_resource path="res://d_key.glb" type="PackedScene" id=5]
+[ext_resource path="res://a_key.glb" type="PackedScene" id=6]
 
 [node name="HeadingDisplay" type="Spatial"]
 script = ExtResource( 2 )
@@ -21,24 +22,27 @@ transform = Transform( 1, 0, 0, 0, 0.153314, 0.988178, 0, -0.988178, 0.153314, 0
 transform = Transform( 0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, 0.707107, 0, 0, 0 )
 
 [node name="arrow" parent="Pivot" instance=ExtResource( 1 )]
-transform = Transform( -6.11959e-09, 0, -0.14, 0, 0.14, 0, 0.14, 0, -6.11959e-09, 0, 0, -1 )
+transform = Transform( -1.49012e-08, 0, -0.14, 0, 0.14, 0, 0.14, 0, -1.49012e-08, -0.0116536, 0, -0.505385 )
 
 [node name="arrow2" parent="Pivot" instance=ExtResource( 1 )]
-transform = Transform( -6.11959e-09, 0, 0.14, 0, 0.14, 0, -0.14, 0, -6.11959e-09, 0, 0, 1 )
+transform = Transform( -1.49012e-08, 0, 0.14, 0, 0.14, 0, -0.14, 0, -1.49012e-08, -0.0586557, 0, 0.506694 )
 
 [node name="arrow3" parent="Pivot" instance=ExtResource( 1 )]
-transform = Transform( -0.14, 0, -1.22392e-08, 0, 0.14, 0, 1.22392e-08, 0, -0.14, 1, 0, 0 )
+transform = Transform( -0.14, 0, -1.49012e-08, 0, 0.14, 0, 1.49012e-08, 0, -0.14, 0.474562, 0, -0.056694 )
 
 [node name="arrow4" parent="Pivot" instance=ExtResource( 1 )]
-transform = Transform( 0.14, 0, 2.44784e-08, 0, 0.14, 0, -2.44784e-08, 0, 0.14, -1, 0, 0 )
+transform = Transform( 0.14, 0, 2.23517e-08, 0, 0.14, 0, -2.23517e-08, 0, 0.14, -0.555251, 0, 0.00576243 )
 
 [node name="Tween" type="Tween" parent="Pivot"]
 
 [node name="w_key" parent="Pivot" instance=ExtResource( 3 )]
-transform = Transform( 0.697562, -0.294802, 0.653069, 0.018278, 0.918465, 0.395081, -0.716291, -0.263656, 0.646075, -2.12856, 0, 0.153209 )
+transform = Transform( 0.348438, -0.147256, 0.326213, 0.00913002, 0.458781, 0.197346, -0.357793, -0.131699, 0.32272, -0.7337, 0.161529, 0.0481464 )
 
 [node name="s_key" parent="Pivot" instance=ExtResource( 4 )]
-transform = Transform( 0.67207, -0.249104, 0.69733, 0, 0.941717, 0.336405, -0.740488, -0.226088, 0.6329, 2.2514, 0, -0.0408915 )
+transform = Transform( 0.336035, -0.124552, 0.348665, 0, 0.470859, 0.168203, -0.370244, -0.113044, 0.31645, 0.698451, 0.162, -0.0410404 )
 
 [node name="d_key" parent="Pivot" instance=ExtResource( 5 )]
-transform = Transform( 0.661377, 0, 0.750054, 0, 1, 0, -0.750054, 0, 0.661378, -0.080633, -0.232203, -2.53782 )
+transform = Transform( 0.360954, -0.176777, 0.297426, 0.00612967, 0.433013, 0.249925, -0.34594, -0.176777, 0.314763, 0.0379539, 0.162, -0.696608 )
+
+[node name="a_key" parent="Pivot" instance=ExtResource( 6 )]
+transform = Transform( 0.353553, -0.176777, 0.306186, 0, 0.433013, 0.25, -0.353553, -0.176777, 0.306186, -0.0556557, 0.162, 0.706695 )

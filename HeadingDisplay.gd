@@ -8,6 +8,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if tween.is_active():
 		$Pivot/w_key.look_at(Vector3(-100, -100, -100), Vector3.UP)
+		$Pivot/a_key.look_at(Vector3(-100,-100,-100), Vector3.UP)
 		$Pivot/s_key.look_at(Vector3(-100,-100,-100), Vector3.UP)
 		$Pivot/d_key.look_at(Vector3(-100,-100,-100), Vector3.UP)
 		
