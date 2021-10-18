@@ -6,8 +6,9 @@
 [sub_resource type="GDScript" id=1]
 script/source = "extends Spatial
 
-var longStraightScene = preload(\"res://LongStraight.tscn\")
-var ZScene = preload(\"res://Zpiece.tscn\")
+onready var longStraightScene = preload(\"res://LongStraight.tscn\")
+onready var ZScene = preload(\"res://Zpiece.tscn\")
+onready var outline_material = preload(\"res://outline_mat.tres\")
 var longStraight: Piece
 var mode = 0
 var height = 20
@@ -18,6 +19,7 @@ var toggle = true
 var camera_rotate = null
 onready var cameraTween = $Pivot/Tween
 signal rotate_game(positive)
+var original_mat
 
 func _ready() -> void:
 
@@ -36,13 +38,13 @@ func _process(delta: float) -> void:
 
 	if (camera_rotate == 0):
 
-		cameraTween.interpolate_property($Pivot, \"rotation:y\", $Pivot.rotation.y, $Pivot.rotation.y + deg2rad(90.0), 0.2)
+		cameraTween.interpolate_property($Pivot, \"rotation:y\", $Pivot.rotation.y, $Pivot.rotation.y + deg2rad(90.0), 0.15)
 		cameraTween.start()
 		emit_signal(\"rotate_game\", true)
 		camera_rotate = null
 		
 	if (camera_rotate == 1):
-		cameraTween.interpolate_property($Pivot, \"rotation:y\", $Pivot.rotation.y, $Pivot.rotation.y - deg2rad(90.0), 0.2)
+		cameraTween.interpolate_property($Pivot, \"rotation:y\", $Pivot.rotation.y, $Pivot.rotation.y - deg2rad(90.0), 0.15)
 		cameraTween.start()
 		emit_signal(\"rotate_game\", false)
 		camera_rotate = null
@@ -54,18 +56,28 @@ func spawn_new_block() -> void:
 	longStraight = longStraightScene.instance() if toggle else ZScene.instance()
 	toggle = not toggle
 	add_child(longStraight)
+	original_mat = longStraight.get_child(0).get_material_override()
+	var new_mat = original_mat.duplicate()
+	new_mat.set_next_pass(outline_material)
+	for cube in longStraight.get_children():
+		(cube as CSGBox).set_material_override(new_mat)
+		
 	longStraight.transform.origin = Vector3(-length+1, height+1, -width)
 
 func _on_Timer_timeout() -> void:
-	print(\"tick\")
 	if longStraight:
 		if not is_set():
 			# 2 is important for the math of converting block origin to matrix position right now
 			longStraight.transform.origin.y -= 2
 		else:
+			remove_outline()
 			record_set(longStraight)
 			check_planes()
 			spawn_new_block()
+			
+func remove_outline() -> void:
+	for cube in longStraight.get_children():
+		(cube as CSGBox).set_material_override(original_mat)
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed(\"switch_mode\"):
