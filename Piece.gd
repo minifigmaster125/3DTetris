@@ -12,8 +12,14 @@ func _process(delta: float) -> void:
 #	DebugOverlay.draw.add_vector(self, "transform:basis:x", 1, 4, Color.red)
 #	DebugOverlay.draw.add_vector(self, "transform:basis:y", 1, 4, Color.green)
 
+func get_children_without_outline(outlined: bool) -> Array:
+	var children = .get_children()
+	if outlined:
+		children.pop_back()
+	return children
+
 func can_move(direction: String, length: int, width: int) -> bool: 
-	for cube in get_children():
+	for cube in get_children_without_outline(true):
 		match(direction):
 			"left":
 				if cube.global_transform.origin.z + 1 == 0:
@@ -95,11 +101,10 @@ func rotate_block(event: InputEvent) -> void:
 		global_translate(shift_required())
 	
 func shift_required() -> Vector3:
-	print("SHIFTING")
 	var xshift = 0
 	var yshift = 0
 	var zshift = 0
-	for cube in get_children():
+	for cube in get_children_without_outline(true):
 		var origin = cube.global_transform.origin
 		print (origin)
 		if origin.x < (-length * 2) + 1:

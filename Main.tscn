@@ -55,13 +55,7 @@ func spawn_new_block() -> void:
 	mode = 0
 	longStraight = longStraightScene.instance() if toggle else ZScene.instance()
 	toggle = not toggle
-	add_child(longStraight)
-	original_mat = longStraight.get_child(0).get_material_override()
-	var new_mat = original_mat.duplicate()
-	new_mat.set_next_pass(outline_material)
-	for cube in longStraight.get_children():
-		(cube as CSGBox).set_material_override(new_mat)
-		
+	add_child(longStraight)	
 	longStraight.transform.origin = Vector3(-length+1, height+1, -width)
 
 func _on_Timer_timeout() -> void:
@@ -76,8 +70,7 @@ func _on_Timer_timeout() -> void:
 			spawn_new_block()
 			
 func remove_outline() -> void:
-	for cube in longStraight.get_children():
-		(cube as CSGBox).set_material_override(original_mat)
+	longStraight.get_children().pop_back().queue_free()
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed(\"switch_mode\"):
@@ -116,8 +109,8 @@ func move_block(event: InputEvent) -> void:
 		if longStraight.can_move(\"down\", length, width):
 			longStraight.global_translate(Vector3(2, 0, 0))
 
-func record_set(piece) -> void:
-	for cube in piece.get_children():
+func record_set(piece: Piece) -> void:
+	for cube in piece.get_children_without_outline(false):
 		if not cube.is_queued_for_deletion():
 			var set : Vector3 = cube.global_transform.origin
 			set = convert_origin_to_matrix(set)
@@ -208,7 +201,7 @@ func convert_origin_to_matrix(global_origin: Vector3) -> Vector3:
 		return new
 
 func is_set() -> bool:
-	for cube in longStraight.get_children():
+	for cube in longStraight.get_children_without_outline(true):
 		var current_pos = convert_origin_to_matrix(cube.global_transform.origin)
 		var check_pos = current_pos - Vector3(0,1,0)
 #		print(\"check pose\")
