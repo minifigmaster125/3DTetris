@@ -8,7 +8,6 @@ script/source = "extends Spatial
 
 onready var longStraightScene = preload(\"res://LongStraight.tscn\")
 onready var ZScene = preload(\"res://Zpiece.tscn\")
-onready var outline_material = preload(\"res://outline_mat.tres\")
 var longStraight: Piece
 var mode = 0
 var height = 20
@@ -151,22 +150,29 @@ func free_planes(planes: Array) -> void:
 
 func lower_pieces(planes: Array) -> void:
 	var highest_plane = planes.back()
+	var processed = []
 	for x in length:
 		for z in width:
 			## SKIP IF ALREADY PROCESSED PIECE
 			if matrix[highest_plane+1][x][z] is CSGBox:
 				var piece : Piece = (matrix[highest_plane+1][x][z] as CSGBox).get_parent()
-				var drop_height = calc_piece_drop_height(piece)  # NEXT: ACTUALLY DROP PIECES
-				
-				for cube in piece.get_children():
-					var pos = convert_origin_to_matrix(cube.global_transform.origin)
-					matrix[pos.y][pos.x][pos.z] = false
-				piece.transform.origin.y -= drop_height * 2
-				
-				record_set(piece)
+				if (not processed.has(piece)):
+					var drop_height = calc_piece_drop_height(piece)  # NEXT: ACTUALLY DROP PIECES
+					processed.append(piece)
+					
+					for cube in piece.get_children():
+						var pos = convert_origin_to_matrix(cube.global_transform.origin)
+						matrix[pos.y][pos.x][pos.z] = false
+					piece.transform.origin.y -= drop_height * 2
+					
+					record_set(piece)
 				
 					
-				
+# piece = a piece identified above the cleared plane which needs to be dropped
+# go through each cube in the piece. Go through planes 1 through max height. For each drop height i,
+# check if the location below the cube (cube.y - i) is another cube. If it is a cube, check if it belongs
+# to the same piece. If it does, ignore. If it belongs to a different piece, add i -1 to the array of potential
+# drop heights. If the location is not a cube but the cube height minus the drop height is 0, append that drop height (i).
 func calc_piece_drop_height(piece: Piece) -> int:
 	var done = false
 	var heights = []
