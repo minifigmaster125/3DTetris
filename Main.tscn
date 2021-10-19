@@ -19,6 +19,8 @@ var camera_rotate = null
 onready var cameraTween = $Pivot/Tween
 signal rotate_game(positive)
 var original_mat
+var pause = false
+var broken_pieces = {}
 
 func _ready() -> void:
 
@@ -52,13 +54,13 @@ func _process(delta: float) -> void:
 	
 func spawn_new_block() -> void:
 	mode = 0
-	longStraight = longStraightScene.instance() if toggle else ZScene.instance()
+	longStraight = longStraightScene.instance() # if toggle else ZScene.instance()
 	toggle = not toggle
 	add_child(longStraight)	
 	longStraight.transform.origin = Vector3(-length+1, height+1, -width)
 
 func _on_Timer_timeout() -> void:
-	if longStraight:
+	if longStraight and not pause:
 		if not is_set():
 			# 2 is important for the math of converting block origin to matrix position right now
 			longStraight.transform.origin.y -= 2
@@ -82,6 +84,8 @@ func _input(event: InputEvent) -> void:
 		camera_rotate = 0
 	elif event.is_action_pressed(\"camera_left\") and not cameraTween.is_active():
 		camera_rotate = 1
+	elif event.is_action_pressed(\"pause\"):
+		pause = !pause
 	elif not event is InputEventMouseMotion:
 		match(mode):
 			1:
@@ -137,16 +141,40 @@ func check_planes() -> void:
 	if planes.size() > 0:
 		print(\"CLEAR\")
 		free_planes(planes)
+		lower_broken_pieces()
 		lower_pieces(planes)
+		broken_pieces = {}
 		check_planes()
 					
 func free_planes(planes: Array) -> void:
 	for y in planes:
 			for x in length:
 				for z in width:
+					if matrix[x][y][z] is CSGBox:
+						var piece = matrix[x][y][z].get_parent()
+						if y == planes.back() and not broken_pieces.has(piece):
+							for cube in piece.get_children():
+								if convert_origin_to_matrix(cube.global_transform.origin).y > y:
+									broken_pieces[piece] = 1
+									break;
+									
 					matrix[y][x][z].queue_free()
 					matrix[y][x][z] = false
 	print_matrix()
+	
+func lower_broken_pieces() -> void:
+	var processed = []
+	for piece in broken_pieces.keys():
+			if (not processed.has(piece)):
+				var drop_height = calc_piece_drop_height(piece)  # NEXT: ACTUALLY DROP PIECES
+				processed.append(piece)
+				
+				for cube in piece.get_children():
+					var pos = convert_origin_to_matrix(cube.global_transform.origin)
+					matrix[pos.y][pos.x][pos.z] = false
+				piece.transform.origin.y -= drop_height * 2
+				
+				record_set(piece)
 
 func lower_pieces(planes: Array) -> void:
 	var highest_plane = planes.back()
@@ -156,7 +184,7 @@ func lower_pieces(planes: Array) -> void:
 			## SKIP IF ALREADY PROCESSED PIECE
 			if matrix[highest_plane+1][x][z] is CSGBox:
 				var piece : Piece = (matrix[highest_plane+1][x][z] as CSGBox).get_parent()
-				if (not processed.has(piece)):
+				if not broken_pieces.has(piece) and not processed.has(piece):
 					var drop_height = calc_piece_drop_height(piece)  # NEXT: ACTUALLY DROP PIECES
 					processed.append(piece)
 					
