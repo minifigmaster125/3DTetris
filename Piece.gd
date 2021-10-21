@@ -124,7 +124,6 @@ func shift_required() -> Vector3:
 	var shift = Vector3(xshift, yshift, zshift)
 
 	print (shift)
-	return shift
-
+	return shift	
 			
 			

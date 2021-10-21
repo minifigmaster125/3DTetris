@@ -8,6 +8,7 @@ script/source = "extends Spatial
 
 onready var longStraightScene = preload(\"res://LongStraight.tscn\")
 onready var ZScene = preload(\"res://Zpiece.tscn\")
+onready var cubePiece = preload(\"res://CubePiece.tscn\")
 var longStraight: Piece
 var mode = 0
 var height = 20
@@ -54,7 +55,7 @@ func _process(delta: float) -> void:
 	
 func spawn_new_block() -> void:
 	mode = 0
-	longStraight = longStraightScene.instance() # if toggle else ZScene.instance()
+	longStraight = longStraightScene.instance()  if toggle else cubePiece.instance()
 	toggle = not toggle
 	add_child(longStraight)	
 	longStraight.transform.origin = Vector3(-length+1, height+1, -width)
@@ -117,7 +118,7 @@ func record_set(piece: Piece) -> void:
 		if not cube.is_queued_for_deletion():
 			var set : Vector3 = cube.global_transform.origin
 			set = convert_origin_to_matrix(set)
-	#		print(set)
+			print(set)
 	#		print(matrix[set.y][set.x][set.z])
 			matrix[set.y][set.x][set.z] = cube  
 	print_matrix()
@@ -130,7 +131,7 @@ func check_planes() -> void:
 		for x in length:
 			if planed:
 				for z in width:
-					if not matrix[y][x][z] is CSGBox:
+					if not matrix[y][x][z] is Cube:
 						planed = false
 						break;
 			else:
@@ -141,25 +142,29 @@ func check_planes() -> void:
 	if planes.size() > 0:
 		print(\"CLEAR\")
 		free_planes(planes)
+		yield(get_tree().create_timer(0.5), \"timeout\")
 		lower_broken_pieces()
 		lower_pieces(planes)
 		broken_pieces = {}
 		check_planes()
 					
 func free_planes(planes: Array) -> void:
+	var processed = []
 	for y in planes:
 			for x in length:
 				for z in width:
-					if matrix[x][y][z] is CSGBox:
-						var piece = matrix[x][y][z].get_parent()
-						if y == planes.back() and not broken_pieces.has(piece):
+					var maybe_cube = matrix[y][x][z]
+					if maybe_cube is Cube:
+						var piece = maybe_cube.get_parent()
+						if y == planes.back() and not broken_pieces.has(piece) and not processed.has(piece):
+							processed.append(piece)
 							for cube in piece.get_children():
 								if convert_origin_to_matrix(cube.global_transform.origin).y > y:
 									broken_pieces[piece] = 1
 									break;
 									
-					matrix[y][x][z].queue_free()
-					matrix[y][x][z] = false
+						maybe_cube.queue_free()
+						matrix[y][x][z] = false
 	print_matrix()
 	
 func lower_broken_pieces() -> void:
@@ -182,18 +187,19 @@ func lower_pieces(planes: Array) -> void:
 	for x in length:
 		for z in width:
 			## SKIP IF ALREADY PROCESSED PIECE
-			if matrix[highest_plane+1][x][z] is CSGBox:
-				var piece : Piece = (matrix[highest_plane+1][x][z] as CSGBox).get_parent()
-				if not broken_pieces.has(piece) and not processed.has(piece):
-					var drop_height = calc_piece_drop_height(piece)  # NEXT: ACTUALLY DROP PIECES
-					processed.append(piece)
-					
-					for cube in piece.get_children():
-						var pos = convert_origin_to_matrix(cube.global_transform.origin)
-						matrix[pos.y][pos.x][pos.z] = false
-					piece.transform.origin.y -= drop_height * 2
-					
-					record_set(piece)
+			for i in range(highest_plane, height-1):
+				if matrix[i+1][x][z] is Cube:
+					var piece : Piece = (matrix[i+1][x][z] as Cube).get_parent()
+					if not broken_pieces.has(piece) and not processed.has(piece):
+						var drop_height = calc_piece_drop_height(piece)  # NEXT: ACTUALLY DROP PIECES
+						processed.append(piece)
+						
+						for cube in piece.get_children():
+							var pos = convert_origin_to_matrix(cube.global_transform.origin)
+							matrix[pos.y][pos.x][pos.z] = false
+						piece.transform.origin.y -= drop_height * 2
+						
+						record_set(piece)
 				
 					
 # piece = a piece identified above the cleared plane which needs to be dropped
@@ -208,7 +214,7 @@ func calc_piece_drop_height(piece: Piece) -> int:
 			for i in range(1,height):
 				var pos = convert_origin_to_matrix(cube.global_transform.origin)
 				var check = matrix[pos.y-i][pos.x][pos.z]
-				if check is CSGBox:
+				if check is Cube:
 					var check_parent = check.get_parent()
 					if (not check_parent == piece):
 						heights.append(i-1)

@@ -10,11 +10,17 @@ config_version=4
 
 _global_script_classes=[ {
 "base": "Spatial",
+"class": "Cube",
+"language": "GDScript",
+"path": "res://Cube.gd"
+}, {
+"base": "Spatial",
 "class": "Piece",
 "language": "GDScript",
 "path": "res://Piece.gd"
 } ]
 _global_script_class_icons={
+"Cube": "",
 "Piece": ""
 }
 
