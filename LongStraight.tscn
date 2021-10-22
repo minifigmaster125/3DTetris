@@ -26,4 +26,5 @@ base_color = Color( 0.584314, 0.537255, 1, 1 )
 [node name="outline" type="CSGBox" parent="."]
 transform = Transform( 1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, 0, 0, 0 )
 material_override = ExtResource( 2 )
+cast_shadow = 0
 depth = 7.40896

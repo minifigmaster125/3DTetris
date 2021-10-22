@@ -54,11 +54,18 @@ func _process(delta: float) -> void:
 	
 	
 func spawn_new_block() -> void:
+	print(\"SPAWN\")
+	print_matrix()
 	mode = 0
-	longStraight = longStraightScene.instance()  if toggle else cubePiece.instance()
+	longStraight = longStraightScene.instance()  if toggle else ZScene.instance()
 	toggle = not toggle
 	add_child(longStraight)	
 	longStraight.transform.origin = Vector3(-length+1, height+1, -width)
+	for cube in longStraight.get_children_without_outline(true):
+		cube.get_node(\"Tween\").connect(\"tween_completed\", self, \"remove_cube\")
+		
+func remove_cube(object, path):
+	object.queue_free()
 
 func _on_Timer_timeout() -> void:
 	if longStraight and not pause:
@@ -114,6 +121,8 @@ func move_block(event: InputEvent) -> void:
 			longStraight.global_translate(Vector3(2, 0, 0))
 
 func record_set(piece: Piece) -> void:
+	print(\"BEFORE\")
+	print_matrix()
 	for cube in piece.get_children_without_outline(false):
 		if not cube.is_queued_for_deletion():
 			var set : Vector3 = cube.global_transform.origin
@@ -121,6 +130,7 @@ func record_set(piece: Piece) -> void:
 			print(set)
 	#		print(matrix[set.y][set.x][set.z])
 			matrix[set.y][set.x][set.z] = cube  
+	print(\"AFTER\")
 	print_matrix()
 
 
@@ -162,9 +172,15 @@ func free_planes(planes: Array) -> void:
 								if convert_origin_to_matrix(cube.global_transform.origin).y > y:
 									broken_pieces[piece] = 1
 									break;
-									
-						maybe_cube.queue_free()
+								
+#						maybe_cube.get_node(\"AnimationPlayer\").play(\"remove_cube\")
+#						var tween := maybe_cube.get_node(\"Tween\") as Tween
+#						tween.interpolate_property(maybe_cube, \"scale\", null, Vector3(0,0,0), 0.5)
+#						tween.start()
+						matrix[y][x][z].queue_free()
 						matrix[y][x][z] = false
+						print(matrix[y][x][z])
+
 	print_matrix()
 	
 func lower_broken_pieces() -> void:
@@ -228,7 +244,7 @@ func calc_piece_drop_height(piece: Piece) -> int:
 	return heights[0]
 	
 func print_matrix() -> void:
-	for x in range(matrix.size()):
+	for x in range(3):
 		print(matrix[x])
 		
 func convert_origin_to_matrix(global_origin: Vector3) -> Vector3:
@@ -241,6 +257,8 @@ func convert_origin_to_matrix(global_origin: Vector3) -> Vector3:
 		return new
 
 func is_set() -> bool:
+	print(\"CHECKING SET\")
+	print_matrix()
 	for cube in longStraight.get_children_without_outline(true):
 		var current_pos = convert_origin_to_matrix(cube.global_transform.origin)
 		var check_pos = current_pos - Vector3(0,1,0)
